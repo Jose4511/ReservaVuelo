@@ -1,0 +1,220 @@
+﻿<h3>MainReservador</h3>
+<style>
+	/* Estilos para el título "MainReservador" */
+	h3 {
+		font-size: 24px;
+		color: #333;
+		margin-bottom: 20px;
+	}
+
+	/* Estilos para el botón "Perfil" */
+	.btn-link {
+		color: #007bff; /* Color azul para enlaces */
+		text-decoration: none; /* Sin subrayado */
+		cursor: pointer; /* Cambia el cursor al pasar por encima */
+	}
+
+		.btn-link:hover {
+			text-decoration: underline; /* Subrayado al pasar por encima */
+		}
+
+	/* Estilos para la lista de vuelos */
+	ul {
+		list-style: none; /* Sin viñetas */
+		padding: 0;
+	}
+
+	/* Estilos para cada vuelo en la lista */
+	.list-group-item {
+		margin-bottom: 20px;
+	}
+
+	/* Estilos para la imagen del vuelo */
+	.img-fluid {
+		max-width: 100%;
+		height: auto;
+	}
+
+	/* Estilos para los elementos de información del vuelo */
+	.card-title {
+		font-size: 18px;
+		color: #333;
+		margin-bottom: 10px;
+	}
+
+	.card-text {
+		font-size: 16px;
+		color: #555;
+	}
+
+	/* Estilos para los mensajes de estado del vuelo */
+	.alert-dismissible,
+	.alert-danger,
+	.alert-success {
+		font-size: 16px;
+		margin-top: 5px;
+		padding: 8px 12px;
+		border-radius: 4px;
+	}
+
+	.alert-dismissible {
+		color: #333;
+		background-color: #f8d7da;
+	}
+
+	.alert-danger {
+		color: #721c24;
+		background-color: #f8d7da;
+	}
+	body{
+		background-color:azure
+	}
+	.alert-success {
+		color: #155724;
+		background-color: #d4edda;
+	}
+
+	/* Estilos para los botones de compra y cancelación */
+	.btn-outline-success,
+	.btn-outline-warning {
+		padding: 8px 16px;
+		font-size: 16px;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.btn-outline-success {
+		color: #28a745;
+		border: 1px solid #28a745;
+	}
+
+	.btn-outline-warning {
+		color: #ffc107;
+		border: 1px solid #ffc107;
+	}
+
+		.btn-outline-success:hover,
+		.btn-outline-warning:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+		}
+
+</style>
+@if (!ToProfile)
+{
+	<button class="btn btn-link" @onclick=GoToProfile>Perfil</button>
+
+	<ul>
+		@foreach (Vuelo vuelo in vuelos)
+		{
+			<li class="list-group-item">
+				<ul class="list-group">
+					<li class="list-group-item">
+						<div class="row">
+							<div class="col-sm-2">
+								<img src=@vuelo.UrlImage class="img-fluid" />
+							</div>
+							<div class="col-sm-10">
+								<h5 class="card-title">@vuelo.LugarSalida --  @vuelo.LugarDestino</h5>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						<div class="row">
+							<div class="col-sm-2">
+								<i class="fas fa-plane-departure"></i>
+							</div>
+							<div class="col-sm-10">
+								<h5 class="card-title">Información de vuelo</h5>
+								<p class="card-text">Fecha Salida: @vuelo.FechaSalida </p>
+								<p class="card-text">
+									Fecha LLegada (Aprox): @vuelo.FechaLlegada
+								</p>
+								<p class="card-text">Acientos Disponibles: @vuelo.AsientoDisponible</p>
+								<p class="card-text">Estado: @vuelo.Estado</p>
+								<p class="card-text">Precio: @vuelo.Precio USD</p>
+							</div>
+						</div>
+					</li>
+					<li class="list-group-item">
+						@if (vuelo.Estado == EstadoVuelo.Completado)
+						{
+							<p class="alert-dismissible">Vuelo ya Realizado</p>
+						}
+						else if (vuelo.Estado == EstadoVuelo.Cancelado)
+						{
+							<p class="alert-danger">Vuelo Actualmente Cancelado</p>
+						}
+						else if (vuelo.Estado != EstadoVuelo.Activo)
+						{
+							<p class="alert-success">Vuelo Actualmente En espera de ser procesado</p>
+						}
+						else if (vuelo.Estado == EstadoVuelo.Activo)
+						{
+							if (!VerificaExistencia(vuelo))
+							{
+								if (vuelo.AsientoDisponible == 0)
+								{
+									<p class="alert-dismissible">Vuelo Actualmente LLENO</p>
+								}
+								else
+								{
+									<button class="btn btn-outline-success" @onclick="()=>ComprarBoleto(vuelo)">Comprar</button>
+								}
+							}
+							else
+							{
+								<p class="alert-success">Comprado</p>
+								<button class="btn btn-outline-warning" @onclick="()=>QuitarBoleto(vuelo)">Cancelar</button>
+							}
+						}
+						else
+						{
+							<p class="alert-danger">Vuelo Actualmente En proceso</p>
+						}
+					</li>
+				</ul>
+			</li>
+		}
+	</ul>
+
+}
+else
+{
+	<PerfilUsuario perfil="@PerfilActual"></PerfilUsuario>
+}
+
+@code {
+	public bool ToProfile { get; set; } = false;
+	public void GoToProfile()
+	{
+		ToProfile = true;
+	}
+
+	private List<Vuelo> vuelos = GestorRegistros.vuelosRegistrados;
+	[Parameter]
+	public Perfil PerfilActual { get; set; }
+
+	private void ComprarBoleto(Vuelo vuelo)
+	{
+		GestorRegistros.AddTicketToProfile(vuelo, PerfilActual);
+		ActualizaVuelos();
+	}
+	private void QuitarBoleto(Vuelo vuelo)
+	{
+		GestorRegistros.RemoveTicketToProfile(vuelo, PerfilActual);
+		ActualizaVuelos();
+	}
+	private void ActualizaVuelos()
+	{
+		vuelos = GestorRegistros.vuelosRegistrados;
+	}
+
+	private bool VerificaExistencia(Vuelo vuelo)
+	{
+		if (PerfilActual.GetVuelos().Count > 0)
+		{
+			return PerfilActual.GetVuelos().Any(x => x == vuelo);
+		}
+		return false;
+	}
+}

@@ -1,0 +1,82 @@
+﻿
+<style>
+
+	/* Estilos para el título "Register" */
+	h3 {
+		font-size: 24px;
+		color: #333;
+		margin-bottom: 20px;
+	}
+
+	/* Estilos para el formulario de registro */
+	.form-group {
+		margin-bottom: 20px;
+	}
+
+	.input-group-text {
+		display: block;
+		font-weight: bold;
+		margin-bottom: 6px;
+	}
+
+	.form-control {
+		width: 100%;
+		padding: 12px;
+		font-size: 16px;
+		border: 1px solid #ccc;
+		border-radius: 6px;
+		transition: border-color 0.3s ease;
+	}
+
+		.form-control:focus {
+			border-color: #007bff;
+		}
+
+	/* Estilos para el botón "Registrarse" */
+	.btn-outline-success {
+		background-color: #28a745;
+		color: #fff;
+		border: 1px solid #28a745;
+		padding: 12px 24px;
+		font-size: 18px;
+		cursor: pointer;
+		border-radius: 6px;
+		transition: background-color 0.3s ease;
+	}
+
+		.btn-outline-success:hover {
+			background-color: #218838;
+		}
+
+</style>
+
+<h3>Register</h3>
+
+<EditForm Model="@perfil">
+	<DataAnnotationsValidator />
+
+	<div class="form-group">
+		<label class="input-group-text" for="nombre">Nombre:</label>
+		<InputText id="nombre" class="form-control" @bind-Value="perfil.Nombre" required />
+	</div>
+
+	<div class="form-group">
+		<label class="input-group-text" for="contrasena">Contraseña:</label>
+		<InputText id="contrasena" type="password" class="form-control" @bind-Value="@perfil.Password" required />
+	</div>
+
+	<button @onclick=Registrar class="btn btn-outline-success">Registrarse</button>
+</EditForm>
+
+@code {
+	public Perfil perfil = new Perfil("", "");
+
+	private void Registrar()
+	{
+		if (!string.IsNullOrEmpty(perfil.Nombre) && !string.IsNullOrEmpty(perfil.Password) && GestorRegistros.perfilesRegistrados.Any(x => x == perfil))
+		{
+			GestorRegistros.perfilesRegistrados.Add(perfil);
+		}
+	}
+}
+
